@@ -3,6 +3,8 @@ package models;
 import java.io.Serializable;
 
 public class User implements Serializable {
+    //auto generated class to store user login info
+    
     private String username;
     private String password;
 

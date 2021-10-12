@@ -15,29 +15,26 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
 
-        //start session
-        HttpSession session = request.getSession();
-        
+        HttpSession session = request.getSession(); //getting session
 
-        if (request.getParameter("username") != null && request.getParameter("password") != null) {
-            String username = request.getParameter("username");
-            session.setAttribute("username", username);
-            String password = request.getParameter("password");
-            session.setAttribute("password", password);
-        }      
-       
+        String s_username = (String) session.getAttribute("sessionUser"); //grabing session variable
 
-        if (request.getQueryString() != null) {
+        if (request.getQueryString() != null) { //checking if user selected to logout
             if (request.getQueryString().equals("logout")) {
-                session.invalidate();
-                request.setAttribute("message", "You have sucessfully logged out.");
-                getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response);
+                session.invalidate(); //destroying session
+                request.setAttribute("message", "You have sucessfully logged out."); //setting message to notify user of logout
+                getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response); //loading login page
                 return;
 
             }
         }
 
-        getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response);
+        if (s_username != null) { //checking if user is logged in, if true redirects to home page
+            response.sendRedirect("home");
+            return;
+        }
+
+        getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response); //loads login page
         return;
 
     }
@@ -46,10 +43,10 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
 
-        String username = request.getParameter("username");
+        String username = request.getParameter("username"); //fills login page input boxes
         String password = request.getParameter("password");
 
-        if (username == null || username.equals("") && password == null || password.equals("")) {
+        if (username == null || username.equals("") && password == null || password.equals("")) { //checking user entered username and pass
             request.setAttribute("message", "Please enter your username and password");
             //display form again
             getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response);
@@ -57,22 +54,25 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-         AccountService userlogin =  new AccountService();
-         User loginInfo = userlogin.login(username,password);
-
         request.setAttribute("username", username);//setting values of textboxes
         request.setAttribute("password", password);
 
-        if (loginInfo == null) {
+        AccountService userlogin = new AccountService(); //creating instance of AccountService
+        User loginInfo = userlogin.login(username, password); //calling login method to valid login info
+
+        if (loginInfo == null) { //Checking if login info was correct
             request.setAttribute("message", "Invalid login info");
             //display form again
-
             getServletContext().getRequestDispatcher("/WEB-INF/login.jsp").forward(request, response);
             //after reload stop rest of execution
             return;
         }
 
-        getServletContext().getRequestDispatcher("/WEB-INF/home.jsp").forward(request, response);
+        HttpSession session = request.getSession(); //getting session
+
+        session.setAttribute("sessionUser", username); //setting session variable to username
+
+        response.sendRedirect("home"); //redirecting to home page
         return;
     }
 
